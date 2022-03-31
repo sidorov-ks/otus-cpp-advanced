@@ -6,6 +6,7 @@ set(PROJECT_VESRION 0.0.${PATCH_VERSION})
 project(helloworld VERSION ${PROJECT_VESRION})
 
 option(WITH_BOOST_TEST "Whether to build Boost test" ON)
+option(WITH_GTEST "Whether to build Gtest" OFF)
 
 configure_file(version.h.in version.h)
 
@@ -83,4 +84,19 @@ include(CPack)
 if (WITH_BOOST_TEST)
   enable_testing()
   add_test(test_version test_version)
+endif ()
+
+if (WITH_GTEST)
+  include(FetchContent)
+  FetchContent_Declare(
+    googletest
+    URL https://github.com/google/googletest/archive/609281088cfefc76f9d0ce82e1ff6c30cc3591e5.zip
+  )
+  set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+  FetchContent_MakeAvailable(googletest)
+  enable_testing()
+  add_executable(test_version_gtest test_version_gtest.cpp)
+  target_link_libraries(test_version_gtest gtest gtest_main helloworld)
+  include(GoogleTest)
+  gtest_discover_tests(test_version_gtest)
 endif ()
