@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "lib.h"
+#include "ip.h"
 
 TEST(test_version, test_valid_version
 )
