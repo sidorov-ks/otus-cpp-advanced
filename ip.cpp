@@ -30,7 +30,13 @@ std::istream &operator>>(std::istream &is, IPAddress &ip) {
   const int n_octets = 4;
   ip.address = 0;
   for (size_t octet = 1; octet <= n_octets; ++octet) {
+    if (token.empty()) {
+      is.setstate(std::ios_base::failbit);
+    }
     size_t pos = token.find('.');
+    if (pos == std::string::npos) {
+      pos = token.length();
+    }
     buffer = token.substr(0, pos);
     try {
       unsigned char octet_val = static_cast<unsigned char>(std::stoi(buffer));
@@ -44,6 +50,7 @@ std::istream &operator>>(std::istream &is, IPAddress &ip) {
     catch (std::out_of_range const &ex) {
       is.setstate(std::ios_base::failbit);
     }
+    if (is.fail()) break;
   }
   return is;
 }
