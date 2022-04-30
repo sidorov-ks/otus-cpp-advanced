@@ -7,14 +7,15 @@ class linear_allocator {
 public:
   using value_type = T;
 
-  linear_allocator() : pool(std::malloc(BasePoolSize * sizeof(T))), pool_size(BasePoolSize), used_count(0) {
-  }
+  linear_allocator() : pool(reinterpret_cast<T *>(std::malloc(BasePoolSize * sizeof(T)))),
+                       pool_size(BasePoolSize), used_count(0) {}
 
   ~linear_allocator() {
     std::free(pool);
   }
 
-  linear_allocator(const linear_allocator<T, BasePoolSize> &) : pool(std::malloc(BasePoolSize * sizeof(T))),
+  linear_allocator(const linear_allocator<T, BasePoolSize> &) : pool(
+          reinterpret_cast<T *>(std::malloc(BasePoolSize * sizeof(T)))),
                                                                 pool_size(BasePoolSize), used_count(0) {
   }
 
@@ -32,11 +33,11 @@ public:
       auto new_pool_size = Multiplier * pool_size;
       T *new_pool = reinterpret_cast<T *>(std::malloc(new_pool_size * sizeof(T)));
       // FIXME На этой строке расширение аллокатора падает с SIGSEGV для T = std::string
-      std::move(reinterpret_cast<T *>(pool), reinterpret_cast<T *>(pool) + pool_size, new_pool);
+      std::move(pool, pool + pool_size, new_pool);
       pool = new_pool;
       pool_size = new_pool_size;
     }
-    auto p = reinterpret_cast<T *>(pool) + used_count;
+    auto p = pool + used_count;
     used_count += n;
     return p;
   }
@@ -47,7 +48,7 @@ public:
   }
 
 private:
-  void *pool;
+  T *pool;
   std::size_t pool_size;
   std::size_t used_count;
 };
