@@ -1,62 +1,78 @@
-#include "ip.h"
+#include "linear_allocator.hpp"
 
+#include <chrono>
 #include <iostream>
-#include <vector>
-#include <algorithm>
-#include <functional>
-#include <sstream>
+#include <list> // FIXME
+#include <map>
 
-template<typename InputIterator>
-void output_if(InputIterator begin, InputIterator end,
-               const std::function<bool(const IPAddress &)> &cond, std::ostream &os) {
-  for (auto it = begin; it != end; ++it) {
-    if (cond(*it)) os << *it << "\n";
+const std::size_t MAX_MAP_SIZE = 1 << 16;
+const std::size_t MAX_LIST_SIZE = 1 << 20;
+
+using value_t = unsigned long long;
+using alloc_t = std::pair<const std::size_t, value_t>;
+
+template<typename AllocType = std::allocator<alloc_t>>
+std::chrono::duration<double, std::milli>
+benchmark_map(std::size_t n_elements, std::size_t n_runs = 1, bool output = false) {
+  std::chrono::duration<double, std::milli> total_duration{};
+  for (std::size_t run = 1; run <= n_runs; ++run) {
+    auto start = std::chrono::high_resolution_clock::now();
+    std::map<std::size_t, long long, std::less<>, AllocType> trial_map{};
+    value_t value = 1;
+    for (std::size_t key = 0; key < n_elements; ++key) {
+      trial_map[key] = value;
+      value *= key + 1;
+    }
+    auto end = std::chrono::high_resolution_clock::now();
+    total_duration += end - start;
+    if (output && run == 1) {
+      std::cerr << "Contents of the map:\n";
+      for (const auto &record: trial_map) {
+        std::cerr << record.first << " " << record.second << "\n";
+      }
+    }
   }
+  return total_duration / n_runs;
+}
+
+template<typename AllocType = std::allocator<alloc_t>>
+std::chrono::duration<double, std::milli>
+benchmark_list(std::size_t n_elements, std::size_t n_runs = 1, bool output = false) {
+  std::chrono::duration<double, std::milli> total_duration{};
+  for (std::size_t run = 1; run <= n_runs; ++run) {
+    auto start = std::chrono::high_resolution_clock::now();
+    std::list<std::size_t, AllocType> trial_list{};
+    for (std::size_t key = 0; key < n_elements; ++key) {
+      trial_list.push_back(key);
+    }
+    auto end = std::chrono::high_resolution_clock::now();
+    total_duration += end - start;
+    if (output && run == 1) {
+      std::cerr << "Contents of the list:\n";
+      for (const auto &record: trial_list) {
+        std::cerr << record << " ";
+      }
+      std::cerr << "\n";
+    }
+  }
+  return total_duration / n_runs;
 }
 
 int main(int, char **) {
-  std::vector<IPAddress> addresses{};
-  std::vector<std::string> bad_addresses;
-  while (std::cin) {
-    std::string _address_line;
-    std::getline(std::cin, _address_line);
-    std::stringstream ss{_address_line};
-    IPAddress _address{};
-    std::string _field_2, _field_3;
-    ss >> _address >> _field_2 >> _field_3;
-    if (!ss.fail()) {
-      addresses.push_back(_address);
-    } else {
-      bad_addresses.push_back(_address_line);
-    }
+  for (std::size_t n_elements = 10; n_elements <= MAX_MAP_SIZE; n_elements <<= 1) {
+    std::cout << n_elements << " elements, std::allocator, std::map, avg time = "
+              << benchmark_map(n_elements, 32).count() << " ms \n";
+    std::cout << n_elements << " elements, linear_allocator<" << 10 << ">, std::map, avg time = "
+              << benchmark_map<linear_allocator<alloc_t, 10>>(n_elements, 32, n_elements == 10).count() << " ms \n";
+    std::cout << n_elements << " elements, linear_allocator<" << MAX_MAP_SIZE << ">, std::map, avg time = "
+              << benchmark_map<linear_allocator<alloc_t, MAX_MAP_SIZE>>(n_elements, 32).count() << " ms \n";
   }
-  if (bad_addresses.empty()) {
-    std::sort(addresses.begin(), addresses.end(),
-              [](IPAddress lhs, IPAddress rhs) { return lhs.address > rhs.address; });
-    output_if(addresses.begin(), addresses.end(),
-              [](IPAddress address) {
-                (void) address;
-                return true;
-              }, std::cout);
-    output_if(addresses.begin(), addresses.end(),
-              [](IPAddress address) { return get_octet(address, 1) == 1; },
-              std::cout);
-    output_if(addresses.begin(), addresses.end(),
-              [](IPAddress address) { return get_octet(address, 1) == 46 && get_octet(address, 2) == 70; },
-              std::cout);
-    output_if(addresses.begin(), addresses.end(),
-              [](IPAddress address) {
-                unsigned char octets[4] = {get_octet(address, 1),
-                                           get_octet(address, 2),
-                                           get_octet(address, 3),
-                                           get_octet(address, 4)};
-                return (octets[0] == 46 || octets[1] == 46 || octets[2] == 46 || octets[3] == 46);
-              },
-              std::cout);
-  } else {
-    std::cerr << "Encountered malformed input lines:\n";
-    for (const auto &bad_address: bad_addresses) {
-      std::cerr << bad_address << "\n";
-    }
+  for (std::size_t n_elements = 10; n_elements <= MAX_LIST_SIZE; n_elements <<= 1) {
+    std::cout << n_elements << " elements, std::allocator, list, avg time = "
+              << benchmark_list(n_elements, 32).count() << " ms \n";
+    std::cout << n_elements << " elements, linear_allocator<" << 10 << ">, list, avg time = "
+              << benchmark_list<linear_allocator<alloc_t, 10>>(n_elements, 32, n_elements == 10).count() << " ms \n";
+    std::cout << n_elements << " elements, linear_allocator<" << MAX_LIST_SIZE << ">, list, avg time = "
+              << benchmark_list<linear_allocator<alloc_t, MAX_LIST_SIZE>>(n_elements, 32).count() << " ms \n";
   }
 }

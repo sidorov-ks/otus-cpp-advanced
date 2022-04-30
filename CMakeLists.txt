@@ -3,26 +3,27 @@ cmake_minimum_required(VERSION 3.2)
 set(PATCH_VERSION "1" CACHE INTERNAL "Patch version")
 set(PROJECT_VESRION 0.0.${PATCH_VERSION})
 
-project(ip VERSION ${PROJECT_VESRION})
+project(allocator VERSION ${PROJECT_VESRION})
 
 option(WITH_GTEST "Whether to build Gtest" ON)
 
 configure_file(version.h.in version.h)
 
-add_executable(ip_filter main.cpp)
-add_library(ip ip.cpp)
+add_executable(alloc_bin main.cpp)
+add_library(alloc linear_allocator.hpp)
 
-set_target_properties(ip_filter ip PROPERTIES
+set_target_properties(alloc_bin alloc PROPERTIES
   CXX_STANDARD 14
   CXX_STANDARD_REQUIRED ON
+  LINKER_LANGUAGE CXX
   )
 
-target_include_directories(ip
+target_include_directories(alloc
   PRIVATE "${CMAKE_BINARY_DIR}"
   )
 
-target_link_libraries(ip_filter PRIVATE
-  ip
+target_link_libraries(alloc_bin PRIVATE
+  alloc
   )
 
 if (WITH_GTEST)
@@ -34,39 +35,39 @@ if (WITH_GTEST)
   set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
   FetchContent_MakeAvailable(googletest)
   enable_testing()
-  add_executable(test_ip test.cpp)
-  target_link_libraries(test_ip gtest gtest_main ip)
+  add_executable(test_alloc test.cpp)
+  target_link_libraries(test_alloc gtest gtest_main alloc)
   include(GoogleTest)
-  gtest_discover_tests(test_ip)
+  gtest_discover_tests(test_alloc)
 endif ()
 
 if (MSVC)
-  target_compile_options(ip_filter PRIVATE
+  target_compile_options(alloc_bin PRIVATE
     /W4
     )
-  target_compile_options(ip PRIVATE
+  target_compile_options(alloc PRIVATE
     /W4
     )
   if (WITH_GTEST)
-    target_compile_options(test_ip PRIVATE
+    target_compile_options(test_alloc PRIVATE
       /W4
       )
   endif ()
 else ()
-  target_compile_options(ip_filter PRIVATE
+  target_compile_options(alloc_bin PRIVATE
     -Wall -Wextra -pedantic -Werror
     )
-  target_compile_options(ip PRIVATE
+  target_compile_options(alloc PRIVATE
     -Wall -Wextra -pedantic -Werror
     )
   if (WITH_GTEST)
-    target_compile_options(test_ip PRIVATE
+    target_compile_options(test_alloc PRIVATE
       -Wall -Wextra -pedantic -Werror
       )
   endif ()
 endif ()
 
-install(TARGETS ip_filter RUNTIME DESTINATION bin)
+install(TARGETS alloc_bin RUNTIME DESTINATION bin)
 
 set(CPACK_GENERATOR DEB)
 set(CPACK_PACKAGE_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")

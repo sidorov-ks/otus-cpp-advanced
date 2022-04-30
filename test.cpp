@@ -1,45 +1,33 @@
 #include <gtest/gtest.h>
 
-#include "ip.h"
+#include "linear_allocator.hpp"
 
-TEST(ip_octet_read, test_octet_layout) {
-  IPAddress address{0xC0A80001}; // 192.168.0.1
-  EXPECT_EQ(get_octet(address, 1), static_cast<unsigned char>(192));
-  EXPECT_EQ(get_octet(address, 2), static_cast<unsigned char>(168));
-  EXPECT_EQ(get_octet(address, 3), static_cast<unsigned char>(0));
-  EXPECT_EQ(get_octet(address, 4), static_cast<unsigned char>(1));
+#include <vector>
+
+TEST(std_vector_tests, small_int_vector) {
+  std::vector<int, linear_allocator<int, 32>> _array(4, 1);
+  for (int el = 0; el < 4; ++el)
+    ASSERT_EQ(_array[el], 1);
 }
 
-TEST(ip_octet_read, test_octet_range) {
-  IPAddress address{};
-  EXPECT_DEATH({ get_octet(address, -1); }, "Assertion `octet >= 1 && octet <= 4' failed.");
-  EXPECT_DEATH({ get_octet(address, 0); }, "Assertion `octet >= 1 && octet <= 4' failed.");
-  EXPECT_DEATH({ get_octet(address, 5); }, "Assertion `octet >= 1 && octet <= 4' failed.");
-  EXPECT_DEATH({ get_octet(address, 1 << 8); }, "Assertion `octet >= 1 && octet <= 4' failed.");
+TEST(std_vector_tests, large_int_vector) {
+  std::vector<int, linear_allocator<int, 32>> _array(64, 1);
+  for (int el = 0; el < 64; ++el)
+    ASSERT_EQ(_array[el], 1);
 }
 
-TEST(ip_istream, test_ok_read) {
-  IPAddress address{};
-  std::stringstream ss{"192.168.0.1"};
-  ss >> address;
-  EXPECT_EQ(address.address, 0xC0A80001);
+TEST(std_vector_tests, small_str_vector) {
+  std::vector<std::string, linear_allocator<std::string, 4>> _array{"ab", "ba", "cab"};
+  ASSERT_EQ(_array[0], "ab");
+  ASSERT_EQ(_array[1], "ba");
+  ASSERT_EQ(_array[2], "cab");
 }
 
-TEST(ip_istream, test_bad_read) {
-  std::string malformed[]{"192.168.0",
-                          "a.b.c.d",
-                          "abaca",
-                          "192 168 0 1"};
-  for (const std::string &bad_ip: malformed) {
-    IPAddress address{};
-    std::stringstream ss{bad_ip};
-    ss >> address;
-    EXPECT_TRUE(ss.fail()) << "Failed to set `failbit` on string " << bad_ip;
-  }
-}
-
-TEST(ip_ostream, test_output) {
-  std::stringstream ss{};
-  ss << IPAddress{0xC0A80001} << "\n" << IPAddress{0xFFFFFFFF} << "\n";
-  EXPECT_EQ(ss.str(), "192.168.0.1\n255.255.255.255\n");
+TEST(std_vector_tests, large_str_vector) {
+  std::vector<std::string, linear_allocator<std::string, 4>> _array{"ab", "ba", "cab", "bac", "cabba"};
+  ASSERT_EQ(_array[0], "ab");
+  ASSERT_EQ(_array[1], "ba");
+  ASSERT_EQ(_array[2], "cab");
+  ASSERT_EQ(_array[3], "bac");
+  ASSERT_EQ(_array[4], "cabba");
 }
