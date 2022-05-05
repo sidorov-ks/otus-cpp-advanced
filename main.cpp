@@ -62,16 +62,20 @@ int main(int, char **) {
   for (std::size_t n_elements = 10; n_elements <= MAX_MAP_SIZE; n_elements <<= 1) {
     std::cout << n_elements << " elements, std::allocator, std::map, avg time = "
               << benchmark_map(n_elements, 32).count() << " ms \n";
-    std::cout << n_elements << " elements, linear_allocator<" << 10 << ">, std::map, avg time = "
-              << benchmark_map<linear_allocator<alloc_t, 10>>(n_elements, 32, n_elements == 10).count() << " ms \n";
+    if (n_elements <= 10) {
+      std::cout << n_elements << " elements, linear_allocator<" << 10 << ">, std::map, avg time = "
+                << benchmark_map<linear_allocator<alloc_t, 10>>(n_elements, 32, n_elements == 10).count() << " ms \n";
+    }
     std::cout << n_elements << " elements, linear_allocator<" << MAX_MAP_SIZE << ">, std::map, avg time = "
               << benchmark_map<linear_allocator<alloc_t, MAX_MAP_SIZE>>(n_elements, 32).count() << " ms \n";
   }
   for (std::size_t n_elements = 10; n_elements <= MAX_LIST_SIZE; n_elements <<= 1) {
     std::cout << n_elements << " elements, std::allocator, list, avg time = "
               << benchmark_list(n_elements, 32).count() << " ms \n";
-    std::cout << n_elements << " elements, linear_allocator<" << 10 << ">, list, avg time = "
-              << benchmark_list<linear_allocator<alloc_t, 10>>(n_elements, 32, n_elements == 10).count() << " ms \n";
+    if (n_elements <= 10) {
+      std::cout << n_elements << " elements, linear_allocator<" << 10 << ">, list, avg time = "
+                << benchmark_list<linear_allocator<alloc_t, 10>>(n_elements, 32, n_elements == 10).count() << " ms \n";
+    }
     std::cout << n_elements << " elements, linear_allocator<" << MAX_LIST_SIZE << ">, list, avg time = "
               << benchmark_list<linear_allocator<alloc_t, MAX_LIST_SIZE>>(n_elements, 32).count() << " ms \n";
   }
