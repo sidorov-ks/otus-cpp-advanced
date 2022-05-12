@@ -8,12 +8,15 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./src
     steps:
       - uses: actions/checkout@v2
         with:
           submodules: true
       - run: sudo apt-get update
-      - run: cmake . -DPATCH_VERSION=${{ github.run_number }} -DWITH_GTEST=ON -DBUILD_DOC=OFF
+      - run: cmake . -DPATCH_VERSION=${{ github.run_number }} -DWITH_GTEST=ON -DBUILD_DOC=ON
       - run: cmake --build .
       - run: cmake --build . --target test
       - run: cmake --build . --target package
