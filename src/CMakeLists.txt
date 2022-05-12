@@ -56,6 +56,10 @@ if (WITH_GTEST)
   enable_testing()
   add_executable(test_ip test.cpp)
   target_link_libraries(test_ip gtest gtest_main ip)
+  set_target_properties(test_ip PROPERTIES
+    CXX_STANDARD 20
+    CXX_STANDARD_REQUIRED ON
+    )
   include(GoogleTest)
   gtest_discover_tests(test_ip)
 endif ()
