@@ -13,7 +13,7 @@ jobs:
         with:
           submodules: true
       - run: sudo apt-get update
-      - run: sudo apt-get install doxygen
+      - run: sudo apt-get install doxygen graphviz
       - run: cmake ./src -DPATCH_VERSION=${{ github.run_number }} -DWITH_GTEST=ON -DBUILD_DOC=ON
       - run: cmake --build .
       - run: cmake --build . --target test
