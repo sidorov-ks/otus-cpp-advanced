@@ -3,25 +3,45 @@ cmake_minimum_required(VERSION 3.2)
 set(PATCH_VERSION "1" CACHE INTERNAL "Patch version")
 set(PROJECT_VESRION 0.0.${PATCH_VERSION})
 
-project(ip VERSION ${PROJECT_VESRION})
+project(print_ip VERSION ${PROJECT_VESRION})
+
+option(BUILD_DOC "Build documentation" ON)
+
+find_package(Doxygen)
+if (DOXYGEN_FOUND)
+  set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/../docs/Doxyfile)
+  set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+
+  configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
+  message("Doxygen build started")
+
+  add_custom_target(doc ALL
+    COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    COMMENT "Generating API documentation with Doxygen"
+    VERBATIM)
+else (DOXYGEN_FOUND)
+  message("Doxygen need to be installed to generate the Doxygen documentation")
+endif (DOXYGEN_FOUND)
 
 option(WITH_GTEST "Whether to build Gtest" ON)
 
 configure_file(version.h.in version.h)
 
-add_executable(ip_filter main.cpp)
-add_library(ip ip.cpp)
+add_executable(print_ip main.cpp)
+add_library(ip ip.hpp custom_type_traits.hpp)
 
-set_target_properties(ip_filter ip PROPERTIES
-  CXX_STANDARD 14
+set_target_properties(print_ip ip PROPERTIES
+  CXX_STANDARD 20
   CXX_STANDARD_REQUIRED ON
+  LINKER_LANGUAGE CXX
   )
 
 target_include_directories(ip
   PRIVATE "${CMAKE_BINARY_DIR}"
   )
 
-target_link_libraries(ip_filter PRIVATE
+target_link_libraries(print_ip PRIVATE
   ip
   )
 
@@ -41,7 +61,7 @@ if (WITH_GTEST)
 endif ()
 
 if (MSVC)
-  target_compile_options(ip_filter PRIVATE
+  target_compile_options(print_ip PRIVATE
     /W4
     )
   target_compile_options(ip PRIVATE
@@ -53,7 +73,7 @@ if (MSVC)
       )
   endif ()
 else ()
-  target_compile_options(ip_filter PRIVATE
+  target_compile_options(print_ip PRIVATE
     -Wall -Wextra -pedantic -Werror
     )
   target_compile_options(ip PRIVATE
@@ -66,7 +86,7 @@ else ()
   endif ()
 endif ()
 
-install(TARGETS ip_filter RUNTIME DESTINATION bin)
+install(TARGETS print_ip RUNTIME DESTINATION bin)
 
 set(CPACK_GENERATOR DEB)
 set(CPACK_PACKAGE_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")
