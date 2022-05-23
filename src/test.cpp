@@ -1,61 +1,79 @@
 #include <gtest/gtest.h>
 
-#include "ip.hpp"
+#include "matrix.hpp"
 
-#include <iostream>
-#include <vector>
-#include <string>
-#include <list>
-#include <tuple>
-
-using namespace std::literals::string_literals;
-
-TEST(ip_octet_write, write_string) {
-  std::stringstream ss;
-  auto ip_addr = "127.0.0.1"s;
-  ss << output_ip << ip_addr;
-  EXPECT_EQ(ip_addr, ss.str());
+TEST(array_access_ops, array_write) {
+  Matrix<int, 1> matrix;
+  matrix[100] = 314;
+  EXPECT_EQ(matrix[100], 314);
 }
 
-TEST(ip_octet_write, write_cstring) {
-  std::stringstream ss;
-  auto ip_addr = "127.0.0.1";
-  ss << output_ip << ip_addr;
-  EXPECT_EQ(ip_addr, ss.str());
+TEST(array_access_ops, array_chained_write) {
+  Matrix<int, 1> matrix;
+  ((matrix[100] = 314) = 0) = 217;
+  EXPECT_EQ(matrix[100], 217);
 }
 
-TEST(ip_octet_write, write_str_literal) {
-  std::stringstream ss;
-  ss << output_ip << "127.0.0.1";
-  EXPECT_EQ("127.0.0.1", ss.str());
+TEST(array_access_ops, array_multiple_write) {
+  Matrix<int, 1> matrix;
+  matrix[0] = 1;
+  matrix[1] = 2;
+  matrix[2] = 3;
+  matrix[3] = 0;
+  EXPECT_EQ(matrix[0], 1);
+  EXPECT_EQ(matrix[1], 2);
+  EXPECT_EQ(matrix[2], 3);
+  EXPECT_EQ(matrix[3], 0);
 }
 
-TEST(ip_octet_write, write_char) {
-  std::stringstream ss;
-  ss << output_ip << char(-1);
-  EXPECT_EQ("255.255.255.255", ss.str());
+TEST(array_access_ops, array_size) {
+  Matrix<int, 1> matrix;
+  matrix[0] = 1;
+  EXPECT_EQ(matrix.size(), 1);
+  matrix[1] = 2;
+  EXPECT_EQ(matrix.size(), 2);
+  matrix[2] = 3;
+  EXPECT_EQ(matrix.size(), 3);
+  matrix[3] = 0;
+  EXPECT_EQ(matrix.size(), 3);
+  matrix[2] = 0;
+  EXPECT_EQ(matrix.size(), 2);
 }
 
-TEST(ip_octet_write, write_int) {
-  std::stringstream ss;
-  ss << output_ip << int(2130706433);
-  EXPECT_EQ("127.0.0.1", ss.str());
+TEST(ndim_matrix_access_ops, matrix_write) {
+  Matrix<int, 3> matrix;
+  matrix[100][100][100] = 314;
+  EXPECT_EQ(matrix[100][100][100], 314);
 }
 
-TEST(ip_octet_write, write_vector) {
-  std::stringstream ss;
-  ss << output_ip << std::vector{1, 2, 3, 4};
-  EXPECT_EQ("1.2.3.4", ss.str());
+TEST(ndim_matrix_access_ops, matrix_chained_write) {
+  Matrix<int, 3> matrix;
+  ((matrix[100][100][100] = 314) = 0) = 217;
+  EXPECT_EQ(matrix[100][100][100], 217);
 }
 
-TEST(ip_octet_write, write_list) {
-  std::stringstream ss;
-  ss << output_ip << std::list{1, 2, 3, 4};
-  EXPECT_EQ("1.2.3.4", ss.str());
+TEST(ndim_matrix_access_ops, matrix_multiple_write) {
+  Matrix<int, 3> matrix;
+  matrix[0][0][0] = 1;
+  matrix[1][1][1] = 2;
+  matrix[2][2][2] = 3;
+  matrix[0][1][0] = 0;
+  EXPECT_EQ(matrix[0][0][0], 1);
+  EXPECT_EQ(matrix[1][1][1], 2);
+  EXPECT_EQ(matrix[2][2][2], 3);
+  EXPECT_EQ(matrix[0][1][0], 0);
 }
 
-TEST(ip_octet_write, write_tuple) {
-  std::stringstream ss;
-  ss << output_ip << std::tuple{1, 2, 3, 4};
-  EXPECT_EQ("1.2.3.4", ss.str());
+TEST(ndim_matrix_access_ops, matrix_size) {
+  Matrix<int, 3> matrix;
+  matrix[0][0][0] = 1;
+  EXPECT_EQ(matrix.size(), 1);
+  matrix[1][1][1] = 2;
+  EXPECT_EQ(matrix.size(), 2);
+  matrix[2][2][2] = 3;
+  EXPECT_EQ(matrix.size(), 3);
+  matrix[0][1][0] = 0;
+  EXPECT_EQ(matrix.size(), 3);
+  matrix[2][2][2] = 0;
+  EXPECT_EQ(matrix.size(), 2);
 }

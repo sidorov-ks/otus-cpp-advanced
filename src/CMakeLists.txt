@@ -3,46 +3,27 @@ cmake_minimum_required(VERSION 3.2)
 set(PATCH_VERSION "1" CACHE INTERNAL "Patch version")
 set(PROJECT_VESRION 0.0.${PATCH_VERSION})
 
-project(print_ip VERSION ${PROJECT_VESRION})
-
-option(BUILD_DOC "Build documentation" ON)
-
-find_package(Doxygen)
-if (DOXYGEN_FOUND)
-  set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/../docs/Doxyfile)
-  set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
-
-  configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
-  message("Doxygen build started")
-
-  add_custom_target(doc ALL
-    COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    COMMENT "Generating API documentation with Doxygen"
-    VERBATIM)
-else (DOXYGEN_FOUND)
-  message("Doxygen need to be installed to generate the Doxygen documentation")
-endif (DOXYGEN_FOUND)
+project(matrix VERSION ${PROJECT_VESRION})
 
 option(WITH_GTEST "Whether to build Gtest" ON)
 
 configure_file(version.h.in version.h)
 
-add_executable(print_ip main.cpp)
-add_library(ip ip.hpp custom_type_traits.hpp)
+add_executable(matrix main.cpp)
+add_library(libmatrix matrix.hpp cell.hpp matrix_iter.hpp)
 
-set_target_properties(print_ip ip PROPERTIES
+set_target_properties(matrix libmatrix PROPERTIES
   CXX_STANDARD 20
   CXX_STANDARD_REQUIRED ON
   LINKER_LANGUAGE CXX
   )
 
-target_include_directories(ip
+target_include_directories(libmatrix
   PRIVATE "${CMAKE_BINARY_DIR}"
   )
 
-target_link_libraries(print_ip PRIVATE
-  ip
+target_link_libraries(matrix PRIVATE
+  libmatrix
   )
 
 if (WITH_GTEST)
@@ -54,43 +35,43 @@ if (WITH_GTEST)
   set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
   FetchContent_MakeAvailable(googletest)
   enable_testing()
-  add_executable(test_ip test.cpp)
-  target_link_libraries(test_ip gtest gtest_main ip)
-  set_target_properties(test_ip PROPERTIES
+  add_executable(test_matrix test.cpp)
+  target_link_libraries(test_matrix gtest gtest_main libmatrix)
+  set_target_properties(test_matrix PROPERTIES
     CXX_STANDARD 20
     CXX_STANDARD_REQUIRED ON
     )
   include(GoogleTest)
-  gtest_discover_tests(test_ip)
+  gtest_discover_tests(test_matrix)
 endif ()
 
 if (MSVC)
-  target_compile_options(print_ip PRIVATE
+  target_compile_options(matrix PRIVATE
     /W4
     )
-  target_compile_options(ip PRIVATE
+  target_compile_options(libmatrix PRIVATE
     /W4
     )
   if (WITH_GTEST)
-    target_compile_options(test_ip PRIVATE
+    target_compile_options(test_matrix PRIVATE
       /W4
       )
   endif ()
 else ()
-  target_compile_options(print_ip PRIVATE
+  target_compile_options(matrix PRIVATE
     -Wall -Wextra -pedantic -Werror
     )
-  target_compile_options(ip PRIVATE
+  target_compile_options(libmatrix PRIVATE
     -Wall -Wextra -pedantic -Werror
     )
   if (WITH_GTEST)
-    target_compile_options(test_ip PRIVATE
+    target_compile_options(test_matrix PRIVATE
       -Wall -Wextra -pedantic -Werror
       )
   endif ()
 endif ()
 
-install(TARGETS print_ip RUNTIME DESTINATION bin)
+install(TARGETS matrix RUNTIME DESTINATION bin)
 
 set(CPACK_GENERATOR DEB)
 set(CPACK_PACKAGE_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")

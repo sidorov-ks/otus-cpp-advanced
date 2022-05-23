@@ -3,7 +3,7 @@ name: 'C++ Debian CI'
 on:
   push:
     branches:
-      - hw-04-doxygen
+      - hw-06-matrix
 
 jobs:
   build:
@@ -13,7 +13,6 @@ jobs:
         with:
           submodules: true
       - run: sudo apt-get update
-      - run: sudo apt-get install doxygen graphviz
       - run: cmake ./src -DPATCH_VERSION=${{ github.run_number }} -DWITH_GTEST=ON -DBUILD_DOC=ON
       - run: cmake --build .
       - run: cmake --build . --target test
@@ -35,11 +34,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./print_ip-0.0.${{ github.run_number }}-Linux.deb
-          asset_name: print_ip-0.0.${{ github.run_number }}-Linux.deb
+          asset_path: ./matrix-0.0.${{ github.run_number }}-Linux.deb
+          asset_name: matrix-0.0.${{ github.run_number }}-Linux.deb
           asset_content_type: application/vnd.debian.binary-packages
-      - name: Upload Doxygen
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./doc_doxygen/html
