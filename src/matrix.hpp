@@ -1,11 +1,11 @@
 #pragma once
 
 #include "cell.hpp"
+#include "matrix_iter.hpp"
 
 #include <iostream>
 #include <map>
 #include <type_traits>
-#include <memory>
 
 template<typename T, std::size_t Dim, T Default = 0>
 struct MatrixIter;
@@ -18,6 +18,10 @@ public:
   std::size_t size() const;
 
   NestedMatrix &operator[](std::size_t index);
+
+  auto begin() const { return MatrixIter<T, Dim, Default>{this, false}; }
+
+  auto end() const { return MatrixIter<T, Dim, Default>{this, true}; }
 
 private:
   std::map<std::size_t, NestedMatrix> _elements;
@@ -33,6 +37,10 @@ public:
   std::size_t size() const;
 
   ArrayCell &operator[](std::size_t index);
+
+  auto begin() const { return MatrixIter<T, 1, Default>{this, false}; }
+
+  auto end() const { return MatrixIter<T, 1, Default>{this, true}; }
 
 private:
   std::map<std::size_t, ArrayCell> _elements;
