@@ -13,7 +13,8 @@ jobs:
         with:
           submodules: true
       - run: sudo apt-get update
-      - run: cmake ./src -DPATCH_VERSION=${{ github.run_number }} -DWITH_GTEST=ON -DBUILD_DOC=ON
+      - run: g++ --version
+      - run: cmake ./src -DPATCH_VERSION=${{ github.run_number }} -DWITH_GTEST=ON
       - run: cmake --build .
       - run: cmake --build . --target test
       - run: cmake --build . --target package
