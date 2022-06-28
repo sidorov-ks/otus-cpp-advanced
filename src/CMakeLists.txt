@@ -3,27 +3,34 @@ cmake_minimum_required(VERSION 3.2)
 set(PATCH_VERSION "1" CACHE INTERNAL "Patch version")
 set(PROJECT_VESRION 0.0.${PATCH_VERSION})
 
-project(bulk VERSION ${PROJECT_VESRION})
+project(bayan VERSION ${PROJECT_VESRION})
 
 option(WITH_GTEST "Whether to build Gtest" ON)
 
 configure_file(version.h.in version.h)
 
-add_executable(bulk main.cpp io.h io.cpp)
-add_library(libbulk block.h block_processor.h block_processor.cpp)
+add_executable(bayan main.cpp io.h io.cpp)
+add_library(libbayan block.h block_processor.h block_processor.cpp)
 
-set_target_properties(bulk libbulk PROPERTIES
+set_target_properties(bayan libbayan PROPERTIES
   CXX_STANDARD 20
   CXX_STANDARD_REQUIRED ON
   LINKER_LANGUAGE CXX
+  COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK
   )
 
-target_include_directories(libbulk
+find_package(Boost COMPONENTS program_options REQUIRED)
+
+target_include_directories(libbayan
   PRIVATE "${CMAKE_BINARY_DIR}"
   )
 
-target_link_libraries(bulk PRIVATE
-  libbulk
+target_link_libraries(bayan PRIVATE
+  libbayan ${Boost_LIBRARIES}
+  )
+
+target_link_libraries(libbayan
+  ${Boost_LIBRARIES}
   )
 
 if (WITH_GTEST)
@@ -35,43 +42,44 @@ if (WITH_GTEST)
   set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
   FetchContent_MakeAvailable(googletest)
   enable_testing()
-  add_executable(test_bulk test.cpp)
-  target_link_libraries(test_bulk gtest gtest_main libbulk)
-  set_target_properties(test_bulk PROPERTIES
+  add_executable(test_bayan test.cpp)
+  target_link_libraries(test_bayan gtest gtest_main libbulk ${Boost_LIBRARIES})
+  set_target_properties(test_bayan PROPERTIES
     CXX_STANDARD 20
     CXX_STANDARD_REQUIRED ON
+    COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK
     )
   include(GoogleTest)
-  gtest_discover_tests(test_bulk)
+  gtest_discover_tests(test_bayan)
 endif ()
 
 if (MSVC)
-  target_compile_options(bulk PRIVATE
+  target_compile_options(bayan PRIVATE
     /W4
     )
-  target_compile_options(libbulk PRIVATE
+  target_compile_options(libbayan PRIVATE
     /W4
     )
   if (WITH_GTEST)
-    target_compile_options(test_bulk PRIVATE
+    target_compile_options(test_bayan PRIVATE
       /W4
       )
   endif ()
 else ()
-  target_compile_options(bulk PRIVATE
+  target_compile_options(bayan PRIVATE
     -Wall -Wextra -pedantic -Werror
     )
-  target_compile_options(libbulk PRIVATE
+  target_compile_options(libbayan PRIVATE
     -Wall -Wextra -pedantic -Werror
     )
   if (WITH_GTEST)
-    target_compile_options(test_bulk PRIVATE
+    target_compile_options(test_bayan PRIVATE
       -Wall -Wextra -pedantic -Werror
       )
   endif ()
 endif ()
 
-install(TARGETS bulk RUNTIME DESTINATION bin)
+install(TARGETS bayan RUNTIME DESTINATION bin)
 
 set(CPACK_GENERATOR DEB)
 set(CPACK_PACKAGE_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")

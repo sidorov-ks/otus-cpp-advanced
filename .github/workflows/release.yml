@@ -3,7 +3,7 @@ name: 'C++ Debian CI'
 on:
   push:
     branches:
-      - hw-07-cmd
+      - hw-08-bayan
 
 jobs:
   build:
@@ -15,6 +15,7 @@ jobs:
       - run: sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
       - run: sudo apt-get update
       - run: sudo apt-get install -y g++-11 gcc-11
+      - run: sudo apt-get install -y libboost-all-dev
       - run: cmake ./src -DPATCH_VERSION=${{ github.run_number }} -DWITH_GTEST=ON -DCMAKE_C_COMPILER=gcc-11 -D CMAKE_CXX_COMPILER=g++-11
       - run: cmake --build .
       - run: cmake --build . --target test
@@ -36,6 +37,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./bulk-0.0.${{ github.run_number }}-Linux.deb
-          asset_name: bulk-0.0.${{ github.run_number }}-Linux.deb
+          asset_path: ./bayan-0.0.${{ github.run_number }}-Linux.deb
+          asset_name: bayan-0.0.${{ github.run_number }}-Linux.deb
           asset_content_type: application/vnd.debian.binary-packages

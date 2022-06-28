@@ -7,22 +7,31 @@
 #include <list>
 #include <optional>
 
+#include <boost/program_options.hpp>
+
+namespace po = boost::program_options;
+
 int process_args(int argc, char **argv, std::size_t *block_size) {
-  if (argc == 1) {
-    std::cerr << "Usage: ./bulk <block-size>\n";
+  po::options_description desc("Allowed options");
+  desc.add_options()
+          ("help", "produce help message")
+          ("block-size", po::value<int>(), "size of a single block");
+
+  po::variables_map vm;
+  po::store(po::parse_command_line(argc, argv, desc), vm);
+  po::notify(vm);
+
+  if (vm.count("help")) {
+    std::cout << desc << "\n";
     return 1;
   }
-  try {
-    *block_size = std::stol({argv[1]});
+
+  if (vm.count("block-size")) {
+    *block_size = vm["block-size"].as<int>();
     return 0;
-  }
-  catch (std::invalid_argument const &ex) {
-    std::cerr << argv[1] << " is not a number\n";
-    return 2;
-  }
-  catch (std::out_of_range const &ex) {
-    std::cerr << argv[1] << " is out of range\n";
-    return 3;
+  } else {
+    std::cout << desc << "\n";
+    return 1;
   }
 }
 

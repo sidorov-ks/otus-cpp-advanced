@@ -1,7 +1,9 @@
 #include <iostream>
 
+
 #include "block_processor.h"
 #include "io.h"
+
 
 int main(int argc, char **argv) {
   std::size_t block_size;
