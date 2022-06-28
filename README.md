@@ -7,3 +7,4 @@
 - `hw-03-allocator`: ДЗ-03. Аллокатор
 - `hw-04-doxygen`: ДЗ-04. Doxygen
 - `hw-06-matrix`: ДЗ-06. Матрица
+- `hw-07-cmd`: ДЗ-07. cmd

@@ -3,7 +3,7 @@ name: 'C++ Debian CI'
 on:
   push:
     branches:
-      - hw-06-matrix
+      - hw-07-cmd
 
 jobs:
   build:
@@ -36,6 +36,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./matrix-0.0.${{ github.run_number }}-Linux.deb
-          asset_name: matrix-0.0.${{ github.run_number }}-Linux.deb
+          asset_path: ./bulk-0.0.${{ github.run_number }}-Linux.deb
+          asset_name: bulk-0.0.${{ github.run_number }}-Linux.deb
           asset_content_type: application/vnd.debian.binary-packages

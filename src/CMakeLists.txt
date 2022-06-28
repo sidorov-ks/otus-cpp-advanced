@@ -3,27 +3,27 @@ cmake_minimum_required(VERSION 3.2)
 set(PATCH_VERSION "1" CACHE INTERNAL "Patch version")
 set(PROJECT_VESRION 0.0.${PATCH_VERSION})
 
-project(matrix VERSION ${PROJECT_VESRION})
+project(bulk VERSION ${PROJECT_VESRION})
 
 option(WITH_GTEST "Whether to build Gtest" ON)
 
 configure_file(version.h.in version.h)
 
-add_executable(matrix main.cpp)
-add_library(libmatrix matrix.hpp cell.hpp matrix_iter.hpp)
+add_executable(bulk main.cpp io.h io.cpp)
+add_library(libbulk block.h block_processor.h block_processor.cpp)
 
-set_target_properties(matrix libmatrix PROPERTIES
+set_target_properties(bulk libbulk PROPERTIES
   CXX_STANDARD 20
   CXX_STANDARD_REQUIRED ON
   LINKER_LANGUAGE CXX
   )
 
-target_include_directories(libmatrix
+target_include_directories(libbulk
   PRIVATE "${CMAKE_BINARY_DIR}"
   )
 
-target_link_libraries(matrix PRIVATE
-  libmatrix
+target_link_libraries(bulk PRIVATE
+  libbulk
   )
 
 if (WITH_GTEST)
@@ -35,43 +35,43 @@ if (WITH_GTEST)
   set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
   FetchContent_MakeAvailable(googletest)
   enable_testing()
-  add_executable(test_matrix test.cpp)
-  target_link_libraries(test_matrix gtest gtest_main libmatrix)
-  set_target_properties(test_matrix PROPERTIES
+  add_executable(test_bulk test.cpp)
+  target_link_libraries(test_bulk gtest gtest_main libbulk)
+  set_target_properties(test_bulk PROPERTIES
     CXX_STANDARD 20
     CXX_STANDARD_REQUIRED ON
     )
   include(GoogleTest)
-  gtest_discover_tests(test_matrix)
+  gtest_discover_tests(test_bulk)
 endif ()
 
 if (MSVC)
-  target_compile_options(matrix PRIVATE
+  target_compile_options(bulk PRIVATE
     /W4
     )
-  target_compile_options(libmatrix PRIVATE
+  target_compile_options(libbulk PRIVATE
     /W4
     )
   if (WITH_GTEST)
-    target_compile_options(test_matrix PRIVATE
+    target_compile_options(test_bulk PRIVATE
       /W4
       )
   endif ()
 else ()
-  target_compile_options(matrix PRIVATE
+  target_compile_options(bulk PRIVATE
     -Wall -Wextra -pedantic -Werror
     )
-  target_compile_options(libmatrix PRIVATE
+  target_compile_options(libbulk PRIVATE
     -Wall -Wextra -pedantic -Werror
     )
   if (WITH_GTEST)
-    target_compile_options(test_matrix PRIVATE
+    target_compile_options(test_bulk PRIVATE
       -Wall -Wextra -pedantic -Werror
       )
   endif ()
 endif ()
 
-install(TARGETS matrix RUNTIME DESTINATION bin)
+install(TARGETS bulk RUNTIME DESTINATION bin)
 
 set(CPACK_GENERATOR DEB)
 set(CPACK_PACKAGE_VERSION_MAJOR "${PROJECT_VERSION_MAJOR}")
