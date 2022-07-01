@@ -10,7 +10,7 @@ option(WITH_GTEST "Whether to build Gtest" ON)
 configure_file(version.h.in version.h)
 
 add_executable(bayan main.cpp io.h io.cpp)
-add_library(libbayan block.h block_processor.h block_processor.cpp)
+add_library(libbayan search_config.h)
 
 set_target_properties(bayan libbayan PROPERTIES
   CXX_STANDARD 20
@@ -19,7 +19,7 @@ set_target_properties(bayan libbayan PROPERTIES
   COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK
   )
 
-find_package(Boost COMPONENTS program_options REQUIRED)
+find_package(Boost COMPONENTS program_options filesystem REQUIRED)
 
 target_include_directories(libbayan
   PRIVATE "${CMAKE_BINARY_DIR}"
