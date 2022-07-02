@@ -19,7 +19,8 @@ set_target_properties(bayan libbayan PROPERTIES
   COMPILE_DEFINITIONS BOOST_TEST_DYN_LINK
   )
 
-find_package(Boost COMPONENTS program_options filesystem REQUIRED)
+find_package(Boost COMPONENTS program_options filesystem log REQUIRED)
+#find_package(CryptoPP REQUIRED)
 
 target_include_directories(libbayan
   PRIVATE "${CMAKE_BINARY_DIR}"
@@ -31,6 +32,7 @@ target_link_libraries(bayan PRIVATE
 
 target_link_libraries(libbayan
   ${Boost_LIBRARIES}
+  #  cryptopp-shared
   )
 
 if (WITH_GTEST)
