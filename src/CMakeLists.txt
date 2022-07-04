@@ -9,8 +9,8 @@ option(WITH_GTEST "Whether to build Gtest" ON)
 
 configure_file(version.h.in version.h)
 
-add_executable(bayan main.cpp io.h io.cpp)
-add_library(libbayan search_config.h)
+add_executable(bayan main.cpp)
+add_library(libbayan search_config.h bayan.h bayan.cpp hashing.h hashing.cpp)
 
 set_target_properties(bayan libbayan PROPERTIES
   CXX_STANDARD 20
@@ -20,10 +20,10 @@ set_target_properties(bayan libbayan PROPERTIES
   )
 
 find_package(Boost COMPONENTS program_options filesystem log REQUIRED)
-#find_package(CryptoPP REQUIRED)
+find_package(OpenSSL REQUIRED)
 
 target_include_directories(libbayan
-  PRIVATE "${CMAKE_BINARY_DIR}"
+  PRIVATE "${CMAKE_BINARY_DIR}" "${Boost_INCLUDE_DIRS}"
   )
 
 target_link_libraries(bayan PRIVATE
@@ -31,8 +31,7 @@ target_link_libraries(bayan PRIVATE
   )
 
 target_link_libraries(libbayan
-  ${Boost_LIBRARIES}
-  #  cryptopp-shared
+  ${Boost_LIBRARIES} OpenSSL::SSL
   )
 
 if (WITH_GTEST)
