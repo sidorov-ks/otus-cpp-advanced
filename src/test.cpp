@@ -1,113 +1,106 @@
-//#include <gtest/gtest.h>
-//
-//#include <list>
-//#include <string>
-//#include <optional>
-//
-//#include "block_processor.h"
-//
-//const std::size_t BLOCK_SIZE = 4;
-//
-//TEST(block_processor, static_block_single) {
-//  BlockProcessor processor{BLOCK_SIZE};
-//  std::list<std::string> lines{"ab", "ba", "aca", "bacca"};
-//  ASSERT_EQ(BLOCK_SIZE, lines.size());
-//  for (const auto &line: lines) {
-//    EXPECT_FALSE(processor.get_block().has_value());
-//    processor.feed(line);
-//  }
-//  EXPECT_TRUE(processor.get_block().has_value());
-//  EXPECT_EQ(processor.get_block().value().lines, lines);
-//}
-//
-//TEST(block_processor, static_block_multiple_blocks) {
-//  BlockProcessor processor{BLOCK_SIZE};
-//  std::list<std::string> lines_first{"ab", "ba", "aca", "bacca"};
-//  std::list<std::string> lines_second{"ba", "ab", "abba", "cabba"};
-//  std::list<std::string> lines_final{"halt", "this", "test"};
-//  ASSERT_EQ(BLOCK_SIZE, lines_first.size());
-//  ASSERT_EQ(BLOCK_SIZE, lines_second.size());
-//  ASSERT_GT(BLOCK_SIZE, lines_final.size());
-//  for (const auto &line: lines_first) {
-//    EXPECT_FALSE(processor.get_block().has_value());
-//    processor.feed(line);
-//  }
-//  EXPECT_TRUE(processor.get_block().has_value());
-//  EXPECT_EQ(processor.get_block().value().lines, lines_first);
-//  for (auto it = lines_second.begin(); it != lines_second.end(); ++it) {
-//    if (it != lines_second.begin()) {
-//      EXPECT_FALSE(processor.get_block().has_value());
-//    }
-//    processor.feed(*it);
-//  }
-//  EXPECT_TRUE(processor.get_block().has_value());
-//  EXPECT_EQ(processor.get_block().value().lines, lines_second);
-//  for (auto it = lines_final.begin(); it != lines_final.end(); ++it) {
-//    if (it != lines_final.begin()) {
-//      EXPECT_FALSE(processor.get_block().has_value());
-//    }
-//    processor.feed(*it);
-//  }
-//  processor.halt();
-//  EXPECT_TRUE(processor.get_block().has_value());
-//  EXPECT_EQ(processor.get_block().value().lines, lines_final);
-//}
-//
-//TEST(block_processor, dynamic_block_single) {
-//  BlockProcessor processor{BLOCK_SIZE};
-//  std::list<std::string> lines_start{"static", "block"};
-//  std::list<std::string> lines_dyn{"a", "long", "dynamic", "block", "because", "we", "can"};
-//  ASSERT_GT(BLOCK_SIZE, lines_start.size());
-//  ASSERT_NE(BLOCK_SIZE, lines_dyn.size());
-//  for (const auto &line: lines_start) {
-//    EXPECT_FALSE(processor.get_block().has_value());
-//    processor.feed(line);
-//  }
-//  EXPECT_FALSE(processor.get_block().has_value());
-//  processor.open();
-//  EXPECT_TRUE(processor.get_block().has_value());
-//  EXPECT_EQ(processor.get_block().value().lines, lines_start);
-//  for (auto it = lines_dyn.begin(); it != lines_dyn.end(); ++it) {
-//    if (it != lines_dyn.begin()) {
-//      EXPECT_FALSE(processor.get_block().has_value());
-//    }
-//    processor.feed(*it);
-//  }
-//  EXPECT_FALSE(processor.get_block().has_value());
-//  processor.close();
-//  EXPECT_TRUE(processor.get_block().has_value());
-//  EXPECT_EQ(processor.get_block().value().lines, lines_dyn);
-//}
-//
-//TEST(block_processor, dynamic_block_nested) {
-//  BlockProcessor processor{BLOCK_SIZE};
-//  std::list<std::string> lines{"a", "long", "dynamic", "block", "because", "we", "can"};
-//  ASSERT_NE(BLOCK_SIZE, lines.size());
-//  processor.open();
-//  processor.open();
-//  for (const auto &line: lines) {
-//    EXPECT_FALSE(processor.get_block().has_value());
-//    processor.feed(line);
-//  }
-//  EXPECT_FALSE(processor.get_block().has_value());
-//  processor.close();
-//  EXPECT_FALSE(processor.get_block().has_value());
-//  processor.close();
-//  EXPECT_TRUE(processor.get_block().has_value());
-//  EXPECT_EQ(processor.get_block().value().lines, lines);
-//}
-//
-//TEST(block_processor, dynamic_block_interrupted) {
-//
-//  BlockProcessor processor{BLOCK_SIZE};
-//  std::list<std::string> lines{"a", "long", "dynamic", "block", "because", "we", "can"};
-//  ASSERT_NE(BLOCK_SIZE, lines.size());
-//  processor.open();
-//  for (const auto &line: lines) {
-//    EXPECT_FALSE(processor.get_block().has_value());
-//    processor.feed(line);
-//  }
-//  EXPECT_FALSE(processor.get_block().has_value());
-//  processor.halt();
-//  EXPECT_FALSE(processor.get_block().has_value());
-//}
+#include <gtest/gtest.h>
+#include <gmock/gmock.h>
+#include <gmock/gmock-matchers.h>
+
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
+
+#include <random>
+#include <string>
+#include <vector>
+#include <regex>
+
+#include "search_config.h"
+#include "bayan.h"
+
+namespace fs = boost::filesystem;
+
+// Создаёт следующие файлы (одна строка = одинаковое содержимое):
+// ./A.txt ./B.txt ./C.txt ./src/a.py ./src/b.py
+// ./.gitignore
+// ./docs/README.md
+// Все файлы (даже различающиеся) совпадают в первых 2048 символах
+class FilesystemTest : public ::testing::Test {
+protected:
+  FilesystemTest() : _root_dir(fs::temp_directory_path() / fs::unique_path()),
+                     _src_dir(_root_dir / "src"),
+                     _docs_dir(_root_dir / "docs"),
+                     _a_txt_path(_root_dir / "A.txt"),
+                     _b_txt_path(_root_dir / "B.txt"),
+                     _c_txt_path(_root_dir / "C.txt"),
+                     _gitignore_path(_root_dir / ".gitignore"),
+                     _a_py_path(_src_dir / "a.py"),
+                     _b_py_path(_src_dir / "b.py"),
+                     _readme_md_path(_docs_dir / "README.md") {}
+
+  void SetUp() override {
+    std::cerr << _root_dir << "\n";
+    MakeTree();
+    std::string prefix = RandomText(PREFIX_LENGTH);
+    std::string text_1 = prefix + RandomText(SUFFIX_LENGTH);
+    std::string text_2 = prefix + RandomText(SUFFIX_LENGTH);
+    std::string text_3 = prefix + RandomText(SUFFIX_LENGTH);
+    _a_txt << text_1;
+    _b_txt << text_1;
+    _a_py << text_1;
+    _b_py << text_1;
+    _c_txt << text_2;
+    _gitignore << text_3;
+    _readme_md << text_3;
+  }
+
+  void TearDown() override {
+    fs::remove_all(_root_dir);
+  }
+
+  SearchConfiguration DefaultConfig() {
+    return {
+            {{_root_dir}}, {},
+            0, 0,
+            {{std::regex{".*"}}},
+            128, hashing::HASH_MD5
+    };
+  }
+
+  fs::path _root_dir, _src_dir, _docs_dir;
+  fs::path _a_txt_path, _b_txt_path, _c_txt_path, _gitignore_path, _a_py_path, _b_py_path, _readme_md_path;
+  fs::ofstream _a_txt, _b_txt, _c_txt, _gitignore, _a_py, _b_py, _readme_md;
+
+private:
+  std::string RandomText(std::size_t length) {
+    std::string text(length, '\0');
+    for (auto &dis: text)
+      dis = distribution(generator);
+    return text;
+  }
+
+  void MakeTree() {
+    fs::create_directories(_root_dir);
+    fs::create_directories(_src_dir);
+    fs::create_directories(_docs_dir);
+    _a_txt.open(_a_txt_path);
+    _b_txt.open(_b_txt_path);
+    _c_txt.open(_c_txt_path);
+    _gitignore.open(_gitignore_path);
+    _a_py.open(_a_py_path);
+    _b_py.open(_b_py_path);
+    _readme_md.open(_readme_md_path);
+  }
+
+  const std::size_t PREFIX_LENGTH = 2048;
+  const std::size_t SUFFIX_LENGTH = 2048;
+  std::mt19937 generator{std::random_device{}()};
+  std::uniform_int_distribution<int> distribution{'a', 'z'};
+};
+
+TEST_F(FilesystemTest, test_depth) {
+  auto config = DefaultConfig();
+  config.depth = 0;
+  auto depth_0_files = collect_files(config);
+  EXPECT_THAT(depth_0_files, testing::UnorderedElementsAre(_a_txt_path, _b_txt_path, _c_txt_path, _gitignore_path));
+  config.depth = 1;
+  auto depth_1_files = collect_files(config);
+  EXPECT_THAT(depth_1_files,
+              testing::UnorderedElementsAre(_a_txt_path, _b_txt_path, _c_txt_path, _gitignore_path, _a_py_path,
+                                            _b_py_path, _readme_md_path));
+}

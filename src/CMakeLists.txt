@@ -44,7 +44,7 @@ if (WITH_GTEST)
   FetchContent_MakeAvailable(googletest)
   enable_testing()
   add_executable(test_bayan test.cpp)
-  target_link_libraries(test_bayan gtest gtest_main libbayan ${Boost_LIBRARIES})
+  target_link_libraries(test_bayan gtest gtest_main gmock libbayan ${Boost_LIBRARIES})
   set_target_properties(test_bayan PROPERTIES
     CXX_STANDARD 20
     CXX_STANDARD_REQUIRED ON
