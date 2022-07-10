@@ -1,5 +1,4 @@
 #include <gtest/gtest.h>
-#include <gmock/gmock.h>
 #include <gmock/gmock-matchers.h>
 
 #include <boost/filesystem.hpp>
@@ -13,12 +12,44 @@
 #include "search_config.h"
 #include "bayan.h"
 
+TEST(GlobRegexTest, test_star) {
+  auto regex = make_regex("*.txt");
+  std::string matching_names[] = {".txt", "file.txt", "file.txt.txt", "src.cpp.txt"};
+  std::string mismatching_names[] = {"txt", "filetxt", "file.txttxt", "file.txt.tmp", "file_txt"};
+  for (const auto &filename: matching_names)
+    EXPECT_TRUE(std::regex_match(filename, regex));
+  for (const auto &filename: mismatching_names)
+    EXPECT_FALSE(std::regex_match(filename, regex));
+}
+
+TEST(GlobRegexTest, test_question_mask) {
+  auto regex = make_regex("application_???.log");
+  std::string matching_names[] = {"application_000.log", "application_AAA.log", "application_tmp.log"};
+  std::string mismatching_names[] = {"application000.log", "application.000.log", "application_00.log",
+                                     "aplication_000.log", "my_application_000.log", "app_000.log",
+                                     "application_000.log.txt"};
+  for (const auto &filename: matching_names)
+    EXPECT_TRUE(std::regex_match(filename, regex));
+  for (const auto &filename: mismatching_names)
+    EXPECT_FALSE(std::regex_match(filename, regex));
+}
+
+TEST(GlobRegexTest, test_dot) {
+  auto regex = make_regex("plaintext.log");
+  std::string matching_names[] = {"plaintext.log"};
+  std::string mismatching_names[] = {"whatever", "plaintext_log"};
+  for (const auto &filename: matching_names)
+    EXPECT_TRUE(std::regex_match(filename, regex));
+  for (const auto &filename: mismatching_names)
+    EXPECT_FALSE(std::regex_match(filename, regex));
+}
+
 namespace fs = boost::filesystem;
 
 // Создаёт следующие файлы (одна строка = одинаковое содержимое):
-// ./A.txt ./B.txt ./C.txt ./src/a.py ./src/b.py
-// ./.gitignore
-// ./docs/README.md
+// ./A.txt ./B.txt ./src/a.py ./src/b.py
+// ./.gitignore ./docs/README.md
+// ./C.txt
 // Все файлы (даже различающиеся) совпадают в первых 2048 символах
 class FilesystemTest : public ::testing::Test {
 protected:
@@ -56,8 +87,8 @@ protected:
   SearchConfiguration DefaultConfig() {
     return {
             {{_root_dir}}, {},
-            0, 0,
-            {{std::regex{".*"}}},
+            1, 0,
+            {{make_regex("*")}},
             128, hashing::HASH_MD5
     };
   }
@@ -103,4 +134,44 @@ TEST_F(FilesystemTest, test_depth) {
   EXPECT_THAT(depth_1_files,
               testing::UnorderedElementsAre(_a_txt_path, _b_txt_path, _c_txt_path, _gitignore_path, _a_py_path,
                                             _b_py_path, _readme_md_path));
+}
+
+TEST_F(FilesystemTest, test_exclude_dirs) {
+  auto config = DefaultConfig();
+  auto all_files = collect_files(config);
+  EXPECT_THAT(all_files,
+              testing::UnorderedElementsAre(_a_txt_path, _b_txt_path, _c_txt_path, _gitignore_path, _a_py_path,
+                                            _b_py_path, _readme_md_path));
+  config.exclude_dirs = {{_src_dir}};
+  auto excl_files = collect_files(config);
+  EXPECT_THAT(excl_files,
+              testing::UnorderedElementsAre(_a_txt_path, _b_txt_path, _c_txt_path, _gitignore_path, _readme_md_path));
+}
+
+TEST_F(FilesystemTest, test_masks) {
+  auto config = DefaultConfig();
+  auto all_files = collect_files(config);
+  EXPECT_THAT(all_files,
+              testing::UnorderedElementsAre(_a_txt_path, _b_txt_path, _c_txt_path, _gitignore_path, _a_py_path,
+                                            _b_py_path, _readme_md_path));
+  config.filename_masks = {make_regex("*.txt"), make_regex("*.md")};
+  auto txt_or_md_files = collect_files(config);
+  EXPECT_THAT(txt_or_md_files,
+              testing::UnorderedElementsAre(_a_txt_path, _b_txt_path, _c_txt_path, _readme_md_path));
+}
+
+TEST_F(FilesystemTest, test_duplicates) {
+  auto config = DefaultConfig();
+  std::vector<fs::path> files = {_a_txt_path, _b_txt_path, _c_txt_path, _gitignore_path, _a_py_path,
+                                 _b_py_path, _readme_md_path};
+  auto hash = [config](const std::string &text) { return hashing::hash(config.hash, text); };
+  auto duplicates = find_duplicates(files, config.block_size, hash);
+  EXPECT_THAT(
+          duplicates,
+          testing::UnorderedElementsAre(
+                  testing::UnorderedElementsAre(_c_txt_path),
+                  testing::UnorderedElementsAre(_gitignore_path, _readme_md_path),
+                  testing::UnorderedElementsAre(_a_txt_path, _b_txt_path, _a_py_path, _b_py_path)
+          )
+  );
 }

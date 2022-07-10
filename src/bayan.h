@@ -2,10 +2,13 @@
 
 #include <optional>
 #include <vector>
+#include <regex>
 
 #include <boost/filesystem.hpp>
 
 #include "search_config.h"
+
+std::regex make_regex(const std::string &glob);
 
 std::optional<SearchConfiguration> process_args(int, char **);
 
