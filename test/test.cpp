@@ -7,9 +7,10 @@
 #include "block_processor.h"
 
 const std::size_t BLOCK_SIZE = 4;
+const auto NULL_CALLBACK = [](const Block &_block) { (void) _block; };
 
 TEST(block_processor, static_block_single) {
-  BlockProcessor processor{BLOCK_SIZE};
+  BlockProcessor processor{BLOCK_SIZE, NULL_CALLBACK};
   std::list<std::string> lines{"ab", "ba", "aca", "bacca"};
   ASSERT_EQ(BLOCK_SIZE, lines.size());
   for (const auto &line: lines) {
@@ -21,7 +22,7 @@ TEST(block_processor, static_block_single) {
 }
 
 TEST(block_processor, static_block_multiple_blocks) {
-  BlockProcessor processor{BLOCK_SIZE};
+  BlockProcessor processor{BLOCK_SIZE, NULL_CALLBACK};
   std::list<std::string> lines_first{"ab", "ba", "aca", "bacca"};
   std::list<std::string> lines_second{"ba", "ab", "abba", "cabba"};
   std::list<std::string> lines_final{"halt", "this", "test"};
@@ -54,7 +55,7 @@ TEST(block_processor, static_block_multiple_blocks) {
 }
 
 TEST(block_processor, dynamic_block_single) {
-  BlockProcessor processor{BLOCK_SIZE};
+  BlockProcessor processor{BLOCK_SIZE, NULL_CALLBACK};
   std::list<std::string> lines_start{"static", "block"};
   std::list<std::string> lines_dyn{"a", "long", "dynamic", "block", "because", "we", "can"};
   ASSERT_GT(BLOCK_SIZE, lines_start.size());
@@ -80,7 +81,7 @@ TEST(block_processor, dynamic_block_single) {
 }
 
 TEST(block_processor, dynamic_block_nested) {
-  BlockProcessor processor{BLOCK_SIZE};
+  BlockProcessor processor{BLOCK_SIZE, NULL_CALLBACK};
   std::list<std::string> lines{"a", "long", "dynamic", "block", "because", "we", "can"};
   ASSERT_NE(BLOCK_SIZE, lines.size());
   processor.open();
@@ -98,8 +99,7 @@ TEST(block_processor, dynamic_block_nested) {
 }
 
 TEST(block_processor, dynamic_block_interrupted) {
-
-  BlockProcessor processor{BLOCK_SIZE};
+  BlockProcessor processor{BLOCK_SIZE, NULL_CALLBACK};
   std::list<std::string> lines{"a", "long", "dynamic", "block", "because", "we", "can"};
   ASSERT_NE(BLOCK_SIZE, lines.size());
   processor.open();

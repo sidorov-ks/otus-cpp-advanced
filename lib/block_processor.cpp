@@ -29,6 +29,14 @@ std::optional<Block> BlockProcessor::get_block() const {
   }
 }
 
+bool BlockProcessor::send_block() const {
+  auto _block = get_block();
+  if (_block) {
+    _callback(_block.value());
+    return true;
+  } else return false;
+}
+
 void BlockProcessor::flush() {
   _return_block.clear();
   _return_block.assign(_running_block.begin(), _running_block.end());

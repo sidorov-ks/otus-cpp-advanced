@@ -1,4 +1,5 @@
-add_library(async block.h block_processor.h block_processor.cpp)
+add_library(async async.h async.cpp block.h block_processor.h block_processor.cpp
+  io/producers.h io/producers.cpp io/consumers.h io/consumers.cpp)
 
 set_target_properties(async PROPERTIES
   CXX_STANDARD 20

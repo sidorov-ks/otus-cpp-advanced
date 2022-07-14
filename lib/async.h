@@ -1,0 +1,20 @@
+#pragma once
+
+#include <cstddef>
+
+namespace async {
+
+void startup();
+
+using handle_t = void *;
+
+handle_t connect(std::size_t bulk);
+
+void receive(handle_t handle, const char *data, std::size_t size);
+
+void disconnect(handle_t handle);
+
+const char BLOCK_OPEN[] = "{";
+const char BLOCK_CLOSE[] = "}";
+
+}
