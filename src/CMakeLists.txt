@@ -1,4 +1,4 @@
-add_executable(bulk main.cpp io.h io.cpp)
+add_executable(bulk main.cpp)
 
 set_target_properties(bulk PROPERTIES
   CXX_STANDARD 20

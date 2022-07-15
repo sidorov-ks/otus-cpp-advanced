@@ -3,8 +3,6 @@
 #include "async.h"
 
 int main(int, char **) {
-  async::startup();
-
   std::size_t bulk = 5;
 
   std::thread thread{[bulk]() {
@@ -23,8 +21,6 @@ int main(int, char **) {
 
   thread.join();
   thread2.join();
-
-  // TODO stop queue processing threads
 
   return 0;
 }

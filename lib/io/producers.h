@@ -1,11 +1,16 @@
 #pragma once
 
 #include "../block.h"
+#include "../block_processor.h"
 
 #include <queue>
 #include <mutex>
 #include <condition_variable>
 #include <functional>
+#include <atomic>
+#include <memory>
+
+#include <iostream>
 
 struct LogQueue {
   std::queue<Block> queue;
@@ -14,11 +19,15 @@ struct LogQueue {
 };
 
 struct FileQueue {
-  std::queue<Block> queue;
-  bool parity{false}; // Флаг, устанавливающий, какой из двух потоков занимается обработкой нового элемента
+  std::queue<std::pair<Block, bool>> queue;
   std::mutex mutex;
-  std::condition_variable empty_cv; // Уведомляется, когда в очереди появляется элемент
-  std::condition_variable parity_cv; // Уведомляется, когда один из потоков закончил обработку и "передал ход" другому
+  std::condition_variable empty_cv;
 };
 
-std::function<void(const Block &)> make_producer(LogQueue *log_queue, FileQueue *file_queue);
+struct ProducerQueues {
+  LogQueue log_queue;
+  std::atomic<unsigned char> file_parity_switch;
+  FileQueue file_queue;
+};
+
+BlockProcessor::CallbackType make_producer(std::shared_ptr<ProducerQueues> queues);

@@ -1,16 +1,18 @@
+#include <iostream>
 #include "producers.h"
 
-std::function<void(const Block &)> make_producer(LogQueue *log_queue, FileQueue *file_queue) {
-  return [log_queue, file_queue](const Block &block) {
+BlockProcessor::CallbackType make_producer(std::shared_ptr<ProducerQueues> queues) {
+  return [queues](const Block &block) {
     {
-      std::unique_lock lock(log_queue->mutex);
-      log_queue->queue.push(block);
-      log_queue->empty_cv.notify_all();
+      std::unique_lock lock(queues->log_queue.mutex);
+      queues->log_queue.queue.push(block);
+      queues->log_queue.empty_cv.notify_all();
     }
+    bool current_parity = queues->file_parity_switch.fetch_xor(1);
     {
-      std::unique_lock lock(file_queue->mutex);
-      file_queue->queue.push(block);
-      file_queue->empty_cv.notify_all();
+      std::unique_lock lock(queues->file_queue.mutex);
+      queues->file_queue.queue.push(std::make_pair(block, current_parity));
+      queues->file_queue.empty_cv.notify_all();
     }
   };
 }

@@ -4,8 +4,6 @@
 
 namespace async {
 
-void startup();
-
 using handle_t = void *;
 
 handle_t connect(std::size_t bulk);
