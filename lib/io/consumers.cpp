@@ -3,6 +3,7 @@
 #include <mutex>
 #include <iostream>
 #include <fstream>
+#include <sstream>
 #include <cassert>
 
 std::string make_line(const std::list<std::string> &lines) {
