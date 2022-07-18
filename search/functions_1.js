@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['ip_5fproxy_35',['ip_proxy',['../structip__proxy.html#a5f23b5fe4febf6e20d6a78029c63bc53',1,'ip_proxy']]]
+  ['begin_88',['begin',['../classDocument.html#aabd64b634df01f31e29150f2d9d654a2',1,'Document']]]
 ];
