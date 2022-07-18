@@ -6,6 +6,7 @@
 - `hw-02-ip-addresses`: ДЗ-02. Фильтрация IP-адресов
 - `hw-03-allocator`: ДЗ-03. Аллокатор
 - `hw-04-doxygen`: ДЗ-04. Doxygen
+- `hw-05-editor`: ДЗ-05. Editor
 - `hw-06-matrix`: ДЗ-06. Матрица
 - `hw-07-cmd`: ДЗ-07. cmd
 - `hw-08-bayan`: ДЗ-08. Boost
