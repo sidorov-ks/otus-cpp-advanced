@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.2)
 set(PATCH_VERSION "1" CACHE INTERNAL "Patch version")
 set(PROJECT_VESRION 0.0.${PATCH_VERSION})
 
-project(bulk-async VERSION ${PROJECT_VESRION})
+project(bulk_server VERSION ${PROJECT_VESRION})
 
 option(WITH_GTEST "Whether to build Gtest" ON)
 

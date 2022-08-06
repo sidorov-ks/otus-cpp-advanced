@@ -1,26 +1,19 @@
-#include <thread>
+#include <iostream>
 
-#include "async.h"
+#include "server.h"
 
-int main(int, char **) {
-  std::size_t bulk = 5;
-
-  std::thread thread{[bulk]() {
-    auto h = async::connect(bulk);
-    async::receive(h, "1", 1);
-    async::receive(h, "\n2\n3\n4\n5\n6\n{\na\n", 15);
-    async::receive(h, "b\nc\nd\n}\n89\n", 11);
-    async::disconnect(h);
-  }};
-
-  std::thread thread2{[bulk]() {
-    auto h2 = async::connect(bulk);
-    async::receive(h2, "1\n", 2);
-    async::disconnect(h2);
-  }};
-
-  thread.join();
-  thread2.join();
-
+int main(int argc, char **argv) {
+  try {
+    if (argc != 3) {
+      std::cerr << "Usage: bulk_server <port> <bulk_size>\n";
+      return 1;
+    }
+    short port = std::atoi(argv[1]);
+    std::size_t bulk_size = std::atol(argv[2]);
+    BulkServer {port, bulk_size}.run();
+  }
+  catch (std::exception &e) {
+    std::cerr << "Exception: " << e.what() << "\n";
+  }
   return 0;
 }

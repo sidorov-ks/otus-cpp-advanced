@@ -62,21 +62,27 @@ TEST(block_processor, dynamic_block_single) {
   ASSERT_NE(BLOCK_SIZE, lines_dyn.size());
   for (const auto &line: lines_start) {
     EXPECT_FALSE(processor.get_block().has_value());
+    EXPECT_FALSE(processor.is_dynamic());
     processor.feed(line);
   }
   EXPECT_FALSE(processor.get_block().has_value());
+  EXPECT_FALSE(processor.is_dynamic());
   processor.open();
   EXPECT_TRUE(processor.get_block().has_value());
+  EXPECT_TRUE(processor.is_dynamic());
   EXPECT_EQ(processor.get_block().value().lines, lines_start);
   for (auto it = lines_dyn.begin(); it != lines_dyn.end(); ++it) {
     if (it != lines_dyn.begin()) {
       EXPECT_FALSE(processor.get_block().has_value());
     }
+    EXPECT_TRUE(processor.is_dynamic());
     processor.feed(*it);
   }
   EXPECT_FALSE(processor.get_block().has_value());
+  EXPECT_TRUE(processor.is_dynamic());
   processor.close();
   EXPECT_TRUE(processor.get_block().has_value());
+  EXPECT_FALSE(processor.is_dynamic());
   EXPECT_EQ(processor.get_block().value().lines, lines_dyn);
 }
 
@@ -88,13 +94,17 @@ TEST(block_processor, dynamic_block_nested) {
   processor.open();
   for (const auto &line: lines) {
     EXPECT_FALSE(processor.get_block().has_value());
+    EXPECT_TRUE(processor.is_dynamic());
     processor.feed(line);
   }
   EXPECT_FALSE(processor.get_block().has_value());
+  EXPECT_TRUE(processor.is_dynamic());
   processor.close();
   EXPECT_FALSE(processor.get_block().has_value());
+  EXPECT_TRUE(processor.is_dynamic());
   processor.close();
   EXPECT_TRUE(processor.get_block().has_value());
+  EXPECT_FALSE(processor.is_dynamic());
   EXPECT_EQ(processor.get_block().value().lines, lines);
 }
 

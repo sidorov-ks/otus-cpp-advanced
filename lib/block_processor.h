@@ -29,10 +29,9 @@ public:
 
   void halt();
 
+  [[nodiscard]] bool is_dynamic() const;
 private:
   void flush();
-
-  [[nodiscard]] bool is_dynamic() const;
 
   std::size_t _block_size;
   std::size_t _balance;

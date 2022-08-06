@@ -1,4 +1,4 @@
-add_library(async SHARED async.h async.cpp block.h block_processor.h block_processor.cpp
+add_library(async block.h block_processor.h block_processor.cpp
   io/producers.h io/producers.cpp io/consumers.h io/consumers.cpp)
 
 set_target_properties(async PROPERTIES
@@ -20,5 +20,3 @@ else ()
     -Wall -Wextra -pedantic -Werror
     )
 endif ()
-
-install(TARGETS async RUNTIME DESTINATION lib)
