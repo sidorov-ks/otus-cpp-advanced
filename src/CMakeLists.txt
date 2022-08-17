@@ -1,24 +1,23 @@
-add_executable(bulk_server main.cpp session.cpp session.h server.cpp server.h)
+add_executable(fashio_mnist main.cpp sample.h model.h model.cpp)
 
-set_target_properties(bulk_server PROPERTIES
+set_target_properties(fashio_mnist PROPERTIES
   CXX_STANDARD 20
   CXX_STANDARD_REQUIRED ON
   LINKER_LANGUAGE CXX
   )
 
-find_package(Boost REQUIRED) #  COMPONENTS asio
-
-target_include_directories(bulk_server PRIVATE "${PROJECT_SOURCE_DIR}/lib" "${Boost_INCLUDE_DIRS}")
-target_link_libraries(bulk_server PRIVATE async ${Boost_LIBRARIES})
+find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+target_link_libraries(fashio_mnist Eigen3::Eigen)
 
 if (MSVC)
-  target_compile_options(bulk_server PRIVATE
+  target_compile_options(fashio_mnist PRIVATE
     /W4
     )
 else ()
-  target_compile_options(bulk_server PRIVATE
+  target_compile_options(fashio_mnist PRIVATE
     -Wall -Wextra -pedantic -Werror
+    -fno-math-errno -ffast-math
     )
 endif ()
 
-install(TARGETS bulk_server RUNTIME DESTINATION bin)
+install(TARGETS fashio_mnist RUNTIME DESTINATION bin)
