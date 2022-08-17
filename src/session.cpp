@@ -5,13 +5,17 @@
 const char BLOCK_OPEN[] = "{";
 const char BLOCK_CLOSE[] = "}";
 
-tcp::socket &BlockProcessorSession::socket() {
-  return socket_;
-}
+BlockProcessorSession::BlockProcessorSession(boost::asio::io_service &io_service,
+                                             std::shared_ptr<BlockProcessor> &broadcast,
+                                             BlockProcessor &&processor) : socket_(io_service), broadcast_(broadcast), private_(processor) { }
 
-void BlockProcessorSession::await_message() {
-  auto token = [this](const boost::system::error_code &error, std::size_t bytes_transferred) {
-    handle_read(error, bytes_transferred);
+tcp::socket &BlockProcessorSession::socket() { return socket_; }
+
+void BlockProcessorSession::await_message(std::shared_ptr<BlockProcessorSession> session) {
+  auto token = [session](const boost::system::error_code &error, std::size_t bytes_transferred) {
+    if (error) return;
+    session->handle_read(error, bytes_transferred);
+    session->await_message(session);
   };
   socket_.async_read_some(boost::asio::buffer(data_, max_length), token);
 }
@@ -50,8 +54,5 @@ void BlockProcessorSession::handle_read(const boost::system::error_code &error, 
         line += data_[ix];
       }
     }
-  } else {
-    delete this;
   }
-  await_message();
 }

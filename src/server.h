@@ -1,10 +1,12 @@
-#pragma once
+﻿#pragma once
 
 #include "block_processor.h"
 #include "session.h"
 #include "io/producers.h"
 
 #include <boost/asio.hpp>
+
+#include <memory>
 
 using boost::asio::ip::tcp;
 
@@ -14,10 +16,9 @@ public:
 
   void run();
 
-private:
-  void start_accept();
+  void setup_session();
 
-  void handle_accept(BlockProcessorSession *new_session, const boost::system::error_code &error);
+private:
 
   boost::asio::io_service io_service_;
   tcp::acceptor acceptor_;

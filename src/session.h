@@ -11,12 +11,11 @@ using boost::asio::ip::tcp;
 class BlockProcessorSession {
 public:
   BlockProcessorSession(boost::asio::io_service &io_service, std::shared_ptr<BlockProcessor> &broadcast,
-                        BlockProcessor &&processor) : socket_(io_service), broadcast_(broadcast), private_(processor) {
-  }
+                        BlockProcessor &&processor);
+
+  void await_message(std::shared_ptr<BlockProcessorSession> session);
 
   tcp::socket &socket();
-
-  void await_message();
 
 private:
   void handle_read(const boost::system::error_code &error, std::size_t bytes_transferred);

@@ -14,7 +14,6 @@ std::string make_line(const std::list<std::string> &lines) {
     auto it_next = it;
     if (++it_next != lines.end()) ss << ", ";
   }
-  ss << "\n";
   return ss.str();
 }
 
@@ -23,7 +22,7 @@ void log_thread_fn(std::shared_ptr<ProducerQueues> queues) {
     std::unique_lock lock(queues->log_queue.mutex);
     queues->log_queue.empty_cv.wait(lock, [&queues]() { return !queues->log_queue.queue.empty(); });
     const Block &block = queues->log_queue.queue.front();
-    std::cout << make_line(block.lines);
+    std::cout << make_line(block.lines) << std::endl;
     queues->log_queue.queue.pop();
   }
 }
@@ -40,7 +39,7 @@ void file_thread_fn(std::shared_ptr<ProducerQueues> queue, bool parity) {
     const auto &[block, queue_parity] = queue->file_queue.queue.front();
     assert(parity == queue_parity);
     std::ofstream fout("bulk" + std::to_string(block.block_id.time_since_epoch().count()) + "_" + filename_suffix);
-    fout << make_line(block.lines);
+    fout << make_line(block.lines) << std::endl;
     queue->file_queue.queue.pop();
   }
 }

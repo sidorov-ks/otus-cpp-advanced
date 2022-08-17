@@ -15,25 +15,21 @@ BulkServer::BulkServer(short port, std::size_t bulk_size)
   consumer_threads_.emplace_back(file_thread_fn, queues_, false);
   producer_ = make_producer(queues_);
   broadcast_ = std::make_shared<BlockProcessor>(bulk_size_, producer_);
-  start_accept();
+  setup_session();
 }
 
 void BulkServer::run() {
   io_service_.run();
 }
 
-void BulkServer::start_accept() {
+void BulkServer::setup_session() {
   BlockProcessor session_proc{bulk_size_, producer_};
-  auto *new_session = new BlockProcessorSession(io_service_, broadcast_, std::move(session_proc));
-  auto token = [this, new_session](const boost::system::error_code &error) { handle_accept(new_session, error); };
+  std::shared_ptr<BlockProcessorSession> new_session {
+    new BlockProcessorSession(io_service_, broadcast_, std::move(session_proc))
+  };
+  auto token = [new_session, this](const boost::system::error_code &error) {
+    if (!error) new_session->await_message(new_session);
+    setup_session();
+  };
   acceptor_.async_accept(new_session->socket(), token);
-}
-
-void BulkServer::handle_accept(BlockProcessorSession *new_session, const boost::system::error_code &error) {
-  if (!error) {
-    new_session->await_message();
-  } else {
-    delete new_session;
-  }
-  start_accept();
 }
